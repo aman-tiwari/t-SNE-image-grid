@@ -2,9 +2,9 @@
 
 An openframeworks project that creates a grid of images from a t-SNE projection of ImageNet descriptors.
 
-Run ./setup.sh to download the pretrained ImageNet classifier to generate the imagenet descriptiors.
+Run ./setup.sh to download the pretrained ImageNet classifier used to generate the descriptiors.
 
-For now you need to manually edit ofApp.cpp to edit the number of images it uses & update the location of image files relative to the data folder (generated when first built). I'll make this better soon.
+Expects images in data/images
 
 Uses:
   * [ofxCcv](https://github.com/kylemcdonald/ofxCcv)
