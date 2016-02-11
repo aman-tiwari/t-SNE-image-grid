@@ -11,21 +11,26 @@ void ofApp::setup(){
     ccv.setup("image-net-2012.sqlite3");
     ofLog() << "loaded ccv" << endl;
     
+    ofDirectory dir = ofDirectory("images");
+    
+    // Loads n images, where n is the nearest square to the number
+    // of available images (so we can get a nice square grid
+    ofLog() << "n imgs: " + to_string(dir.listDir());
+    int nearest_square = pow(floor(sqrt(dir.listDir())), 2);
+    ofLog() << "nearest square: " + to_string(nearest_square);
     //load images
     int ii = 0;
-    while(images.size() < 841 && ii < 2000) {
-        if(ii%100 == 0) {
-            ofLog() << "loading image: " + to_string(ii) << endl;
+    for(int i = 0; i < nearest_square; i++) {
+        if(i%100 == 0) {
+            ofLog() << "loading image: " + to_string(i) << endl;
         }
-        if(ofFile::doesFileExist("00000/" + ofToString(ii, 7,'0') + ".jpg", true)) {
-            ofImage temp;
-            temp.load("00000/" + ofToString(ii, 7,'0') + ".jpg");
-            
-            images.push_back(temp);
-        }
-        ii++;
+        ofImage temp;
+        temp.load(dir.getPath(i));
+        images.push_back(temp);
     }
     
+    // the below computes the grid x & y sizes such that the
+    // grid is as close to a square as possible
     int n_imgs = images.size();
     
     for(int n = 1; n < ceil(sqrt(n_imgs) + 1); n++) {
@@ -38,7 +43,7 @@ void ofApp::setup(){
     
     ofLog() << "grid x: " + to_string(grid_x) + " grid y: " + to_string(grid_y) << endl;
 
-    ofLog() << to_string(images.size()) << endl;
+    ofLog() << "n imgs: " + to_string(images.size()) << endl;
     
     ofLog() << "calculating features" << endl;
     
