@@ -25,6 +25,7 @@ class ofApp : public ofBaseApp {
 		void dragEvent(ofDragInfo dragInfo);
 		void gotMessage(ofMessage msg);
     
+    bool saved = false;
     ofxAssignment solver;
     ofxPanel gui;
     ofxFloatSlider scale;
@@ -37,9 +38,15 @@ class ofApp : public ofBaseApp {
     
     vector<ofVec2f> grid;
     vector<ofVec2f> solved_grid;
-    ofEasyCam cam;
+
     int iter = 0;
     int grid_x = 0;
     int grid_y = 0;
     
+    ofVec3f cam_target;
+    
+    ofImage result;
+    ofFbo fbo;
+
+
 };

@@ -6,20 +6,34 @@
   "DVTSourceControlWorkspaceBlueprintWorkingCopyStatesKey" : {
     "6F9E2533A3A0BF5DAB56B3B799BC85A5369ACAAD" : 0,
     "CE6DB5CAD37933655326CE4949F968A4A0799398" : 0,
+    "4D14309A5CCEA25249CF9DB890C07DE627EFFEFA" : 0,
     "D169652A798B93E522A4DA6EC679B4AD26C807F5" : 0,
-    "E0DC71BFE67F75D80C24B658C9671C34FDB45F42" : 0
+    "E0DC71BFE67F75D80C24B658C9671C34FDB45F42" : 0,
+    "5DB7C332A3A89035E93556A2A38BF414005BA671" : 0
   },
   "DVTSourceControlWorkspaceBlueprintIdentifierKey" : "4B7B300E-1D5F-4166-82F5-2DD8B5DC6B51",
   "DVTSourceControlWorkspaceBlueprintWorkingCopyPathsKey" : {
     "6F9E2533A3A0BF5DAB56B3B799BC85A5369ACAAD" : "t-SNE-grid-image\/",
     "CE6DB5CAD37933655326CE4949F968A4A0799398" : "..\/..\/addons\/ofxCcv",
+    "4D14309A5CCEA25249CF9DB890C07DE627EFFEFA" : "..\/..\/addons\/ofxTileSaver",
     "D169652A798B93E522A4DA6EC679B4AD26C807F5" : "..\/..\/addons\/ofxAssignment",
-    "E0DC71BFE67F75D80C24B658C9671C34FDB45F42" : "..\/..\/addons\/ofxTSNE"
+    "E0DC71BFE67F75D80C24B658C9671C34FDB45F42" : "..\/..\/addons\/ofxTSNE",
+    "5DB7C332A3A89035E93556A2A38BF414005BA671" : "..\/..\/addons\/ofxJSON"
   },
   "DVTSourceControlWorkspaceBlueprintNameKey" : "tSNE_images_grid",
   "DVTSourceControlWorkspaceBlueprintVersion" : 204,
   "DVTSourceControlWorkspaceBlueprintRelativePathToProjectKey" : "tSNE_images_grid.xcodeproj",
   "DVTSourceControlWorkspaceBlueprintRemoteRepositoriesKey" : [
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/benben\/ofxTileSaver.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "4D14309A5CCEA25249CF9DB890C07DE627EFFEFA"
+    },
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/jefftimesten\/ofxJSON.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "5DB7C332A3A89035E93556A2A38BF414005BA671"
+    },
     {
       "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/aman-tiwari\/t-SNE-image-grid.git",
       "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
