@@ -1,5 +1,7 @@
 #include "ofApp.h"
 #define IMG_SIZE 128
+#define FEATURE_VEC_LEN 4096
+#define DRAW_TSNE false
 
 //--------------------------------------------------------------
 void ofApp::setup(){
@@ -20,11 +22,40 @@ void ofApp::setup(){
     int n_images = pow(floor(sqrt(dir.listDir())), 2);
     ofLog() << "nearest square: " + to_string(n_images);
     //load images
-    int ii = 0;
-    for(int i = 0; i < n_images; i++) {
-        if(i%10 == 0) {
-            ofLog() << "calculating features for image: " + to_string(i) << endl;
+    ofFile features_file("images/features_" + to_string(FEATURE_VEC_LEN) + ".json", ofFile::ReadWrite);
+    int start_n = 0;
+    if(features_file.exists() && features_json.open(features_file.getAbsolutePath())) {
+        ofLog() << "features file exists" << endl;
+        ofLog() << "successfully opened file" << endl;
+        int n_features = features_json["n_features"].asInt();
+        int feature_size = features_json["feature_size"].asInt();
+        
+        Json::Value features_data = features_json["features"];
+        
+        for(int i = 0; i < n_features; i++) {
+            vector<float> feature;
+            Json::Value feature_data = features_data[i];
+            for(int j = 0; j < feature_size; j++) {
+                feature.push_back(stof(feature_data[j].asString()));
+            }
+            features.push_back(feature);
         }
+        features_file.close();
+        ofLog() << "features read successfully: " + to_string(features.size()) << endl;
+        
+        /*if(n_images > features.size()) {
+            int diff = n_images - features.size();
+            ofLog() << "more images than features, computing remaining " + to_string(diff) << endl;
+            start_n = features.size();
+        } else if(features.size() > n_images) {
+            ofLog() << "more features than images, using only first " + to_string(features.size()) + " images" << endl;
+            n_images = features.size();
+        }*/
+        
+    }
+
+    features_file.close();
+    for(int i = 0; i < n_images; i++) {
         ofImage temp;
         temp.load(dir.getPath(i));
         if(temp.getHeight() > temp.getWidth()) {
@@ -32,20 +63,34 @@ void ofApp::setup(){
         } else {
             temp.crop(0, 0, temp.getHeight(), temp.getHeight());
         }
-
+        
         temp.resize(IMG_SIZE, IMG_SIZE);
         images.push_back(temp);
-        features.push_back(ccv.encode(temp, ccv.numLayers() - 1));
+        if(i >= features.size()) {
+            if(i%10 == 0) {
+                ofLog() << "calculating features for image: " + to_string(i) << endl;
+            }
+            features.push_back(ccv.encode(temp, ccv.numLayers() - 1));
+            resave_features = true;
+            
+        }
     }
+    
+    if(resave_features) {
+        string file_to_del = features_file.getAbsolutePath() + "images/features_" + to_string(FEATURE_VEC_LEN) + ".json";
+        ofLog() << remove(file_to_del.c_str());
+        ofLog() << "saving features" << endl;
+        ofFile new_features_file("images/features_" + to_string(FEATURE_VEC_LEN) + ".json", ofFile::ReadWrite);
         
+        features_saved = true;
+    }
     // the below computes the grid x & y sizes such that the
     // grid is as close to a square as possible
-    int n_imgs = images.size();
     
-    for(int n = 1; n < ceil(sqrt(n_imgs) + 1); n++) {
-        if(n_imgs%n == 0) {
+    for(int n = 1; n < ceil(sqrt(n_images) + 1); n++) {
+        if(n_images%n == 0) {
             grid_y = n;
-            grid_x = n_imgs/n;
+            grid_x = n_images/n;
             
         }
     }
@@ -61,18 +106,29 @@ void ofApp::setup(){
     bool normalize = true;
     
     ofLog() << "starting tsne" << endl;
-    tsne_points = tsne.run(features, dims, perplexity, theta, normalize, true);
+    tsne_points = tsne.run(features, dims, perplexity, theta, normalize, DRAW_TSNE);
 
-    result.allocate(ofNextPow2(IMG_SIZE * grid_x), ofNextPow2(IMG_SIZE * grid_y), OF_IMAGE_COLOR);
-
+    //result.allocate(ofNextPow2(IMG_SIZE * grid_x), ofNextPow2(IMG_SIZE * grid_y), OF_IMAGE_COLOR);
+    
+    if(!DRAW_TSNE) {
+        iter = 999;
+    }
 }
+
+
+void ofApp::exit() {
+}
+
 
 //--------------------------------------------------------------
 void ofApp::update() {
     iter++;
-    if(iter < 1000) {
-        tsne_points = tsne.iterate();
+    if(DRAW_TSNE) {
+        if(iter < 1000) {
+            tsne_points = tsne.iterate();
+        }
     }
+    
 }
 
 //--------------------------------------------------------------
@@ -91,24 +147,28 @@ void ofApp::draw(){
     } else if (iter > 1002) {
         //saver.begin();
         if(!saved) {
+            ofLog() << "attempting to save image" << endl;
             ofClear(255,255,255, 0);
+            ofLog() << "allocating pixels" << endl;
             ofPixels pix;
-            pix.allocate(ofNextPow2(IMG_SIZE * grid_x), ofNextPow2(IMG_SIZE * grid_y), OF_IMAGE_COLOR);
+            pix.allocate(IMG_SIZE * grid_x, IMG_SIZE * grid_y, OF_IMAGE_COLOR);
+            ofLog() << "allocation successful" << endl;
+
             for(int i = 0; i < solved_grid.size(); i++) {
-                images[i].draw(solved_grid[i].x * (IMG_SIZE * grid_x) * (float)(grid_x-1)/(float)(grid_x),
-                               solved_grid[i].y * (IMG_SIZE * grid_y) * (float)(grid_x-1)/(float)(grid_x),
-                               IMG_SIZE,
-                               IMG_SIZE);
-                images[i].getPixels().pasteInto(pix, solved_grid[i].x * (IMG_SIZE * grid_x) * (float)(grid_x-1)/(float)(grid_x), solved_grid[i].y * (IMG_SIZE * grid_y) * (float)(grid_x-1)/(float)(grid_x));
+                images[i].getPixels().pasteInto(pix,
+                                                solved_grid[i].x * (IMG_SIZE * grid_x) * (float)(grid_x-1)/(float)(grid_x),
+                                                solved_grid[i].y * (IMG_SIZE * grid_y) * (float)(grid_y-1)/(float)(grid_y));
             }
             
             //ofSleepMillis(1000);
             
-            result.setFromPixels(pix);
-            if(!saved) {
-                result.save("result_" + to_string(ofGetUnixTime()) + ".png");
-                saved = true;
-            }
+            //result.setFromPixels(pix);
+            ofLog() << "paste successful" << endl;
+            ofSaveImage(pix, "result_" + to_string(ofGetUnixTime()) + ".png", OF_IMAGE_QUALITY_HIGH);
+            ofLog() << "save successful" << endl;
+
+            //result.save("result_" + to_string(ofGetUnixTime()) + ".png");
+            saved = true;
 
         }
         if(saved) {
@@ -121,7 +181,7 @@ void ofApp::draw(){
             
         }
         //saver.end();
-    } else {
+    } else if(DRAW_TSNE) {
         for(int i = 0; i < tsne_points.size(); i++) {
             images[i].draw(tsne_points[i][0] * ofGetWidth() * scale,
                            tsne_points[i][1] * ofGetHeight() * scale,

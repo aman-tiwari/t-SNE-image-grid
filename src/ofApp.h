@@ -5,6 +5,7 @@
 #include "ofxTSNE.h"
 #include "ofxGui.h"
 #include "ofxAssignment.h"
+#include "ofxJSON.h"
 
 class ofApp : public ofBaseApp {
 
@@ -25,6 +26,8 @@ class ofApp : public ofBaseApp {
 		void dragEvent(ofDragInfo dragInfo);
 		void gotMessage(ofMessage msg);
     
+        void exit();
+    void save_features(ofFile new_features_file);
     bool saved = false;
     ofxAssignment solver;
     ofxPanel gui;
@@ -32,7 +35,7 @@ class ofApp : public ofBaseApp {
     ofxTSNE tsne;
     ofxCcv ccv;
     vector<ofImage> images;
-    vector<vector<float>> features;
+    vector<vector<float> > features;
     vector<vector<double>> tsne_points;
     vector<ofVec2f> tsne_vecs;
     
@@ -48,5 +51,8 @@ class ofApp : public ofBaseApp {
     ofImage result;
     ofFbo fbo;
 
+    ofxJSONElement features_json;
+    bool resave_features = false;
+    bool features_saved = false;
 
 };
