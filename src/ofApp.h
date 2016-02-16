@@ -3,7 +3,6 @@
 #include "ofMain.h"
 #include "ofxCcv.h"
 #include "ofxTSNE.h"
-#include "ofxGui.h"
 #include "ofxAssignment.h"
 #include "ofxJSON.h"
 
@@ -30,8 +29,6 @@ class ofApp : public ofBaseApp {
     void save_features(ofFile new_features_file);
     bool saved = false;
     ofxAssignment solver;
-    ofxPanel gui;
-    ofxFloatSlider scale;
     ofxTSNE tsne;
     ofxCcv ccv;
     vector<ofImage> images;

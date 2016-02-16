@@ -6,8 +6,6 @@
 //--------------------------------------------------------------
 void ofApp::setup(){
 
-    gui.setup();
-    gui.add( scale.setup("scale: ", 1, 0.0, 8) );
     //setup ofxCCV
     ofLog() << "loading ccv" << endl;
     ccv.setup("image-net-2012.sqlite3");
@@ -52,6 +50,8 @@ void ofApp::setup(){
             n_images = features.size();
         }*/
         
+    } else {
+        resave_features = true;
     }
 
     features_file.close();
@@ -81,7 +81,32 @@ void ofApp::setup(){
         ofLog() << remove(file_to_del.c_str());
         ofLog() << "saving features" << endl;
         ofFile new_features_file("images/features_" + to_string(FEATURE_VEC_LEN) + ".json", ofFile::ReadWrite);
+        if(!new_features_file.exists()) {
+            new_features_file.create();
+        }
+        Json::Value n_features(Json::uintValue);
+        n_features = (uint)features.size();
         
+        Json::Value feature_size(Json::uintValue);
+        feature_size = (uint)features[0].size();
+        Json::Value features_vec(Json::arrayValue);
+        
+        for(int ii = 0; ii < features.size(); ii++) {
+            
+            Json::Value feature_vec;
+            for(int jj = 0; jj < features[ii].size(); jj++) {
+                Json::Value temp(Json::realValue);
+                temp = features[ii][jj];
+                feature_vec.append(temp);
+            }
+            features_vec.append(feature_vec);
+        }
+        features_json["n_features"] = n_features;
+        features_json["feature_size"] = feature_size;
+        features_json["features"] = features_vec;
+        Json::FastWriter writer;
+        new_features_file << writer.write(features_json);
+        new_features_file.close();
         features_saved = true;
     }
     // the below computes the grid x & y sizes such that the
@@ -114,7 +139,6 @@ void ofApp::setup(){
         iter = 999;
     }
 }
-
 
 void ofApp::exit() {
 }
@@ -151,7 +175,7 @@ void ofApp::draw(){
             ofClear(255,255,255, 0);
             ofLog() << "allocating pixels" << endl;
             ofPixels pix;
-            pix.allocate(IMG_SIZE * grid_x, IMG_SIZE * grid_y, OF_IMAGE_COLOR);
+            pix.allocate(IMG_SIZE * grid_x, IMG_SIZE * grid_y, OF_IMAGE_COLOR_ALPHA);
             ofLog() << "allocation successful" << endl;
 
             for(int i = 0; i < solved_grid.size(); i++) {
@@ -183,9 +207,9 @@ void ofApp::draw(){
         //saver.end();
     } else if(DRAW_TSNE) {
         for(int i = 0; i < tsne_points.size(); i++) {
-            images[i].draw(tsne_points[i][0] * ofGetWidth() * scale,
-                           tsne_points[i][1] * ofGetHeight() * scale,
-                           50 * scale, 50 * scale);
+            images[i].draw(tsne_points[i][0] * ofGetWidth(),
+                           tsne_points[i][1] * ofGetHeight(),
+                           50, 50);
         }
     }
     //images[1].draw(0,0);
