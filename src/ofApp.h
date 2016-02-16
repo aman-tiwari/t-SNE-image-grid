@@ -28,6 +28,7 @@ class ofApp : public ofBaseApp {
         void exit();
     void save_features(ofFile new_features_file);
     bool saved = false;
+    bool DRAW_TSNE = false;
     ofxAssignment solver;
     ofxTSNE tsne;
     ofxCcv ccv;

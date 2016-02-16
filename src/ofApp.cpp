@@ -1,7 +1,6 @@
 #include "ofApp.h"
 #define IMG_SIZE 128
 #define FEATURE_VEC_LEN 4096
-#define DRAW_TSNE false
 
 //--------------------------------------------------------------
 void ofApp::setup(){
@@ -11,20 +10,38 @@ void ofApp::setup(){
     ccv.setup("image-net-2012.sqlite3");
     ofLog() << "loaded ccv" << endl;
     
-    ofDirectory dir = ofDirectory("images");
+    ofDirectory dir = ofDirectory("images/");
     dir.allowExt("jpg");
     
+    ofFile settings_file("settings.json");
+    ofxJSONElement settings_json;
+    int n_images = 0;
+    if(settings_file.exists() && settings_json.open(settings_file.getAbsolutePath())) {
+        
+        ofLog() << "successfully opened settings.json" << endl;
+        if(settings_json["n_images"].asString() == "all") {
+            n_images = pow(floor(sqrt(dir.listDir())), 2);
+        } else {
+            n_images = settings_json["n_images"].asInt();
+            dir.listDir();
+        }
+        
+        DRAW_TSNE = settings_json["draw_tsne"].asBool();
+        
+    } else {
+        n_images = pow(floor(sqrt(dir.listDir())), 2);
+        DRAW_TSNE = false;
+    }
     // Loads n images, where n is the nearest square to the number
     // of available images (so we can get a nice square grid
-    ofLog() << "n imgs: " + to_string(dir.listDir());
-    int n_images = pow(floor(sqrt(dir.listDir())), 2);
+    ofLog() << "n imgs: " + to_string(n_images);
     ofLog() << "nearest square: " + to_string(n_images);
     //load images
     ofFile features_file("images/features_" + to_string(FEATURE_VEC_LEN) + ".json", ofFile::ReadWrite);
-    int start_n = 0;
+
     if(features_file.exists() && features_json.open(features_file.getAbsolutePath())) {
         ofLog() << "features file exists" << endl;
-        ofLog() << "successfully opened file" << endl;
+        ofLog() << "successfully opened features_4096.json" << endl;
         int n_features = features_json["n_features"].asInt();
         int feature_size = features_json["feature_size"].asInt();
         
@@ -175,7 +192,7 @@ void ofApp::draw(){
             ofClear(255,255,255, 0);
             ofLog() << "allocating pixels" << endl;
             ofPixels pix;
-            pix.allocate(IMG_SIZE * grid_x, IMG_SIZE * grid_y, OF_IMAGE_COLOR_ALPHA);
+            pix.allocate(IMG_SIZE * grid_x, IMG_SIZE * grid_y, OF_IMAGE_COLOR);
             ofLog() << "allocation successful" << endl;
 
             for(int i = 0; i < solved_grid.size(); i++) {
@@ -188,7 +205,7 @@ void ofApp::draw(){
             
             //result.setFromPixels(pix);
             ofLog() << "paste successful" << endl;
-            ofSaveImage(pix, "result_" + to_string(ofGetUnixTime()) + ".png", OF_IMAGE_QUALITY_HIGH);
+            ofSaveImage(pix, "result_" + to_string(ofGetUnixTime()) + ".jpeg", OF_IMAGE_QUALITY_HIGH);
             ofLog() << "save successful" << endl;
 
             //result.save("result_" + to_string(ofGetUnixTime()) + ".png");
