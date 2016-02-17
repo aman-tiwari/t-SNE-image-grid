@@ -17,7 +17,7 @@ Optionally reads settings from the ```settings.json``` file:
   "normalize": true }
 ```
 
-Any non-integer value for n_images loads all the available images.
+Any non-integer value for ```n_images``` loads all the available images.
 
 Run from the console to see logging output (```cd tSNE_images_gridDebug.app/Contents/MacOS/```, ```./tStSNE_images_gridDebug```)
 
