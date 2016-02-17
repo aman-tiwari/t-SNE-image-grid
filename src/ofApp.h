@@ -26,12 +26,15 @@ class ofApp : public ofBaseApp {
 		void gotMessage(ofMessage msg);
     
         void exit();
+    
+    void scan_dir_imgs(ofDirectory dir);
     void save_features(ofFile new_features_file);
     bool saved = false;
     bool DRAW_TSNE = false;
     ofxAssignment solver;
     ofxTSNE tsne;
     ofxCcv ccv;
+    vector<ofFile> image_files;
     vector<ofImage> images;
     vector<vector<float> > features;
     vector<vector<double>> tsne_points;

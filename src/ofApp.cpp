@@ -2,6 +2,34 @@
 #define IMG_SIZE 128
 #define FEATURE_VEC_LEN 4096
 
+const string allowed_ext[] = {"jpg", "png", "gif", "jpeg"};
+
+void ofApp::scan_dir_imgs(ofDirectory dir)
+
+{
+    int i, size;
+    ofDirectory new_dir;
+    
+    size = dir.listDir();
+    
+    for (i = 0; i < size; i++){
+        
+        if (dir.getFile(i).isDirectory()){
+            
+            new_dir = ofDirectory(dir.getFile(i).getAbsolutePath());
+            new_dir.listDir();
+            new_dir.sort();
+            scan_dir_imgs(new_dir);
+            
+        } else if (std::find(std::begin(allowed_ext),
+                             std::end(allowed_ext),
+                             dir.getFile(i).getExtension()) != std::end(allowed_ext)) {
+            
+            image_files.push_back(dir.getFile(i));
+            
+        }
+    }
+}
 //--------------------------------------------------------------
 void ofApp::setup(){
 
@@ -11,7 +39,7 @@ void ofApp::setup(){
     ofLog() << "loaded ccv" << endl;
     
     ofDirectory dir = ofDirectory("images/");
-    dir.allowExt("jpg");
+    scan_dir_imgs(dir);
     
     ofFile settings_file("settings.json");
     ofxJSONElement settings_json;
@@ -23,7 +51,7 @@ void ofApp::setup(){
             n_images = settings_json["n_images"].asInt();
             dir.listDir();
         } else {
-            n_images = pow(floor(sqrt(dir.listDir())), 2);
+            n_images = pow(floor(sqrt(image_files.size())), 2);
         }
         
         DRAW_TSNE = settings_json["draw_tsne"].asBool();
@@ -40,7 +68,7 @@ void ofApp::setup(){
         theta = 0.5;
         normalize = true;
         
-        n_images = pow(floor(sqrt(dir.listDir())), 2);
+        n_images = pow(floor(sqrt(image_files.size())), 2);
         DRAW_TSNE = false;
     }
     // Loads n images, where n is the nearest square to the number
@@ -86,11 +114,12 @@ void ofApp::setup(){
     } else {
         resave_features = true;
     }
-
+    
+    
     features_file.close();
     for(int i = 0; i < n_images; i++) {
         ofImage temp;
-        temp.load(dir.getPath(i));
+        temp.load(image_files[i]);
         if(temp.getHeight() > temp.getWidth()) {
             temp.crop(0, 0, temp.getWidth(), temp.getWidth());
         } else {
@@ -217,7 +246,7 @@ void ofApp::draw(){
             
             //result.setFromPixels(pix);
             ofLog() << "paste successful" << endl;
-            ofSaveImage(pix, "result_" + to_string(ofGetUnixTime()) + ".jpeg", OF_IMAGE_QUALITY_HIGH);
+            ofSaveImage(pix, "result_" + to_string(ofGetUnixTime()) + ".jpeg", OF_IMAGE_QUALITY_BEST);
             ofLog() << "save successful" << endl;
 
             //result.save("result_" + to_string(ofGetUnixTime()) + ".png");
