@@ -14,7 +14,7 @@ Optionally reads settings from the ```settings.json``` file:
   "dims": 2,
   "perplexity": 30,
   "theta": 0.5,
-  "normalize": true}
+  "normalize": true }
 ```
 
 Any non-integer value for n_images loads all the available images.
