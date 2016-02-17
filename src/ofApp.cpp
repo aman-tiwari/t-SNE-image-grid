@@ -57,7 +57,7 @@ void ofApp::setup(){
         int n_features = features_json["n_features"].asInt();
         int feature_size = features_json["feature_size"].asInt();
         
-        if(n_features < n_images) {
+        if(n_images < n_features) {
             n_features = n_images;
         }
         
