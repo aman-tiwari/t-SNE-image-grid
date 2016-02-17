@@ -29,6 +29,7 @@ class ofApp : public ofBaseApp {
     
     void scan_dir_imgs(ofDirectory dir);
     void save_features(ofFile new_features_file);
+    
     bool saved = false;
     bool DRAW_TSNE = false;
     ofxAssignment solver;

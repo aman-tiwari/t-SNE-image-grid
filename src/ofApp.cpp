@@ -115,15 +115,21 @@ void ofApp::setup(){
         resave_features = true;
     }
     
-    
     features_file.close();
+    
     for(int i = 0; i < n_images; i++) {
         ofImage temp;
         temp.load(image_files[i]);
         if(temp.getHeight() > temp.getWidth()) {
-            temp.crop(0, 0, temp.getWidth(), temp.getWidth());
+            temp.crop(0,
+                      (temp.getHeight() - temp.getWidth())/2,
+                      temp.getWidth(),
+                      temp.getWidth() + (temp.getHeight() - temp.getWidth())/2);
         } else {
-            temp.crop(0, 0, temp.getHeight(), temp.getHeight());
+            temp.crop((temp.getWidth() - temp.getHeight())/2,
+                      0,
+                      temp.getHeight() + (temp.getWidth() - temp.getHeight())/2,
+                      temp.getHeight());
         }
         
         temp.resize(IMG_SIZE, IMG_SIZE);
@@ -171,6 +177,7 @@ void ofApp::setup(){
         new_features_file.close();
         features_saved = true;
     }
+    
     // the below computes the grid x & y sizes such that the
     // grid is as close to a square as possible
     
@@ -186,9 +193,8 @@ void ofApp::setup(){
 
     ofLog() << "n imgs: " + to_string(images.size()) << endl;
     
-
-    
     ofLog() << "starting tsne" << endl;
+    
     tsne_points = tsne.run(features, dims, perplexity, theta, normalize, DRAW_TSNE);
 
     //result.allocate(ofNextPow2(IMG_SIZE * grid_x), ofNextPow2(IMG_SIZE * grid_y), OF_IMAGE_COLOR);
