@@ -4,7 +4,7 @@ An openframeworks project that creates a grid of images from a t-SNE projection 
 
 Run ```./setup.sh``` to download the pretrained ImageNet classifier used to generate the descriptiors.
 
-Expects images in ```data/images```.
+Expects images to be in/in subdirectories within ```data/images``` (recurses into subdirectories).
 Saves a JSON file containing the descriptors in ```images/features_4096.json```.
 
 Optionally reads settings from the ```settings.json``` file:
