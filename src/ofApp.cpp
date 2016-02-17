@@ -19,11 +19,11 @@ void ofApp::setup(){
     if(settings_file.exists() && settings_json.open(settings_file.getAbsolutePath())) {
         
         ofLog() << "successfully opened settings.json" << endl;
-        if(settings_json["n_images"].asString() == "all") {
-            n_images = pow(floor(sqrt(dir.listDir())), 2);
-        } else {
+        if(isdigit(settings_json["n_images"].asString()[0])) {
             n_images = settings_json["n_images"].asInt();
             dir.listDir();
+        } else {
+            n_images = pow(floor(sqrt(dir.listDir())), 2);
         }
         
         DRAW_TSNE = settings_json["draw_tsne"].asBool();
