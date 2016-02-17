@@ -40,6 +40,12 @@ class ofApp : public ofBaseApp {
     vector<ofVec2f> grid;
     vector<ofVec2f> solved_grid;
 
+    
+    int dims = 0;
+    float perplexity = 0;
+    float theta = 0;
+    bool normalize = true;
+
     int iter = 0;
     int grid_x = 0;
     int grid_y = 0;
