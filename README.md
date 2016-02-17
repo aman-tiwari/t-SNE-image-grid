@@ -4,8 +4,20 @@ An openframeworks project that creates a grid of images from a t-SNE projection 
 
 Run ./setup.sh to download the pretrained ImageNet classifier used to generate the descriptiors.
 
-Expects images in data/images.
+Expects images in ```data/images```.
 Saves a JSON file containing the descriptors in ```images/features_4096.json```.
+
+Optionally reads settings from the ```settings.json``` file:
+```
+{ "n_images": "all", 
+  "draw_tsne": false, 
+  "dims": 2,
+  "perplexity": 30,
+  "theta": 0.5,
+  "normalize": true}
+```
+
+Any non-integer value for n_images loads all the available images.
 
 Run from the console to see logging output (```cd tSNE_images_gridDebug.app/Contents/MacOS/```, ```./tStSNE_images_gridDebug```)
 
