@@ -9,7 +9,7 @@ Saves a JSON file containing the descriptors in ```images/features_4096.json```.
 
 Optionally reads settings from the ```settings.json``` file:
 ```
-{ "n_images": "all", 
+{ "n_images": 4096, 
   "draw_tsne": false, 
   "dims": 2,
   "perplexity": 30,
