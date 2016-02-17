@@ -42,8 +42,13 @@ void ofApp::setup(){
     if(features_file.exists() && features_json.open(features_file.getAbsolutePath())) {
         ofLog() << "features file exists" << endl;
         ofLog() << "successfully opened features_4096.json" << endl;
+        
         int n_features = features_json["n_features"].asInt();
         int feature_size = features_json["feature_size"].asInt();
+        
+        if(n_features < n_images) {
+            n_features = n_images;
+        }
         
         Json::Value features_data = features_json["features"];
         
