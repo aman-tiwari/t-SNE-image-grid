@@ -28,17 +28,17 @@ void ofApp::setup(){
         
         DRAW_TSNE = settings_json["draw_tsne"].asBool();
         
-        int dims = settings_json["dims"].asInt();
-        float perplexity = settings_json["perplexity"].asFloat();
-        float theta = settings_json["theta"].asFloat();
-        bool normalize = settings_json["normalize"].asBool();
+        dims = settings_json["dims"].asInt();
+        perplexity = settings_json["perplexity"].asFloat();
+        theta = settings_json["theta"].asFloat();
+        normalize = settings_json["normalize"].asBool();
         
     } else {
         //TSNE settings
-        int dims = 2;
-        float perplexity = 30;
-        float theta = 0.5;
-        bool normalize = true;
+        dims = 2;
+        perplexity = 30;
+        theta = 0.5;
+        normalize = true;
         
         n_images = pow(floor(sqrt(dir.listDir())), 2);
         DRAW_TSNE = false;
