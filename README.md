@@ -27,7 +27,7 @@ Reads settings from the ```data/settings.json``` file:
 
 Saves a JSON file containing the descriptors in ```<image_set_directory>/features_4096.json```.
 
-I highly reccomend that you run from the console to see logging output (```cd tSNE_images_gridDebug.app/Contents/MacOS/```, ```./tStSNE_images_gridDebug```)
+I highly reccomend that you run from the console to see logging output (```cd tSNE_images_gridDebug.app/Contents/MacOS/```, ```./tSNE_images_gridDebug```)
 
 Uses:
   * [ofxCcv](https://github.com/kylemcdonald/ofxCcv)
