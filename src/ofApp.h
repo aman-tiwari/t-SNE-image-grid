@@ -27,8 +27,8 @@ class ofApp : public ofBaseApp {
     
         void exit();
     
-    void scan_dir_imgs(ofDirectory dir);
-    void save_features(ofFile new_features_file);
+    void scan_dir_imgs(ofDirectory dir, vector<ofFile>& image_files);
+    void save_features(vector<vector<float> > features, ofFile features_file);
     
     bool saved = false;
     bool DRAW_TSNE = false;

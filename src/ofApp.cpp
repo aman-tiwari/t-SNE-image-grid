@@ -4,7 +4,7 @@
 
 const string allowed_ext[] = {"jpg", "png", "gif", "jpeg"};
 
-void ofApp::scan_dir_imgs(ofDirectory dir)
+void ofApp::scan_dir_imgs(ofDirectory dir, vector<ofFile>& image_files)
 
 {
     int i, size;
@@ -12,14 +12,14 @@ void ofApp::scan_dir_imgs(ofDirectory dir)
     
     size = dir.listDir();
     
-    for (i = 0; i < size; i++){
+    for (i = 0; i < size; i++) {
         
-        if (dir.getFile(i).isDirectory()){
+        if (dir.getFile(i).isDirectory()) {
             
             new_dir = ofDirectory(dir.getFile(i).getAbsolutePath());
             new_dir.listDir();
             new_dir.sort();
-            scan_dir_imgs(new_dir);
+            scan_dir_imgs(new_dir, image_files);
             
         } else if (std::find(std::begin(allowed_ext),
                              std::end(allowed_ext),
@@ -31,28 +31,41 @@ void ofApp::scan_dir_imgs(ofDirectory dir)
     }
 }
 //--------------------------------------------------------------
-void ofApp::setup(){
+void ofApp::setup() {
 
     //setup ofxCCV
     ofLog() << "loading ccv" << endl;
     ccv.setup("image-net-2012.sqlite3");
     ofLog() << "loaded ccv" << endl;
     
-    ofDirectory dir = ofDirectory("images/");
-    scan_dir_imgs(dir);
+    std:vector<ofDirectory> image_dirs;
     
     ofFile settings_file("settings.json");
+    
     ofxJSONElement settings_json;
     int n_images = 0;
-    if(settings_file.exists() && settings_json.open(settings_file.getAbsolutePath())) {
+    
+    if(settings_file.exists()
+       && settings_json.open(settings_file.getAbsolutePath())) {
         
         ofLog() << "successfully opened settings.json" << endl;
+        
+        Json::Value image_sets = settings_json["image_sets"];
+        
+        ofLog() << "image directories: " << endl;
+        for(int i = 0; i < image_sets.size(); i++) {
+            ofLog() << image_sets[i]["directory"].asString() << endl;
+            image_dirs.push_back(ofDirectory(image_sets[i]["directory"].asString()));
+            // only doing this to work out number of images we have
+            vector<ofFile> temp_vec;
+            scan_dir_imgs(image_dirs[i], temp_vec);
+            n_images += temp_vec.size();
+        }
+        
         if(isdigit(settings_json["n_images"].asString()[0])) {
             n_images = settings_json["n_images"].asInt();
-            dir.listDir();
-        } else {
-            n_images = pow(floor(sqrt(image_files.size())), 2);
         }
+        
         
         DRAW_TSNE = settings_json["draw_tsne"].asBool();
         
@@ -62,129 +75,112 @@ void ofApp::setup(){
         normalize = settings_json["normalize"].asBool();
         
     } else {
-        //TSNE settings
-        dims = 2;
-        perplexity = 30;
-        theta = 0.5;
-        normalize = true;
+        ofLog() << "err: settings.json not found!" << endl;
+        ofBaseApp::exit();
         
-        n_images = pow(floor(sqrt(image_files.size())), 2);
-        DRAW_TSNE = false;
     }
     // Loads n images, where n is the nearest square to the number
     // of available images (so we can get a nice square grid
     ofLog() << "n imgs: " + to_string(n_images);
     ofLog() << "nearest square: " + to_string(n_images);
-    //load images
-    ofFile features_file("images/features_" + to_string(FEATURE_VEC_LEN) + ".json", ofFile::ReadWrite);
+    
+    
+    //load features & images
+    
+    for(auto image_dir : image_dirs) {
+        
+        ofLog() << "loadings features & images from: " + image_dir.path() << endl;
+        
+        vector< vector<float> > temp_features;
 
-    if(features_file.exists() && features_json.open(features_file.getAbsolutePath())) {
-        ofLog() << "features file exists" << endl;
-        ofLog() << "successfully opened features_4096.json" << endl;
-        
-        int n_features = features_json["n_features"].asInt();
-        int feature_size = features_json["feature_size"].asInt();
-        
-        if(n_images < n_features) {
-            n_features = n_images;
-        }
-        
-        Json::Value features_data = features_json["features"];
-        
-        for(int i = 0; i < n_features; i++) {
-            vector<float> feature;
-            Json::Value feature_data = features_data[i];
-            for(int j = 0; j < feature_size; j++) {
-                feature.push_back(stof(feature_data[j].asString()));
+        ofFile features_file(image_dir.path() + "features_" + to_string(FEATURE_VEC_LEN) + ".json", ofFile::ReadWrite);
+        ofLog() << features_file.path();
+        for(auto file : image_dir) {
+            if(file.getFileName() == "features_" + to_string(FEATURE_VEC_LEN) + ".json") {
+                features_file = ofFile(file, ofFile::ReadWrite);
             }
-            features.push_back(feature);
         }
-        features_file.close();
-        ofLog() << "features read successfully: " + to_string(features.size()) << endl;
         
-        /*if(n_images > features.size()) {
-            int diff = n_images - features.size();
-            ofLog() << "more images than features, computing remaining " + to_string(diff) << endl;
-            start_n = features.size();
-        } else if(features.size() > n_images) {
-            ofLog() << "more features than images, using only first " + to_string(features.size()) + " images" << endl;
-            n_images = features.size();
-        }*/
-        
-    } else {
-        resave_features = true;
-    }
-    
-    features_file.close();
-    
-    for(int i = 0; i < n_images; i++) {
-        ofImage temp;
-        temp.load(image_files[i]);
-        if(temp.getHeight() > temp.getWidth()) {
-            temp.crop(0,
-                      (temp.getHeight() - temp.getWidth())/2,
-                      temp.getWidth(),
-                      temp.getWidth() + (temp.getHeight() - temp.getWidth())/2);
+        if(features_file.exists() && features_json.open(features_file.getAbsolutePath())) {
+            ofLog() << "features file exists" << endl;
+            ofLog() << "successfully opened " + features_file.path() << endl;
+            
+            int n_features = features_json["n_features"].asInt();
+            int feature_size = features_json["feature_size"].asInt();
+            
+            if(n_images < n_features) {
+                n_features = n_images;
+            }
+            
+            Json::Value features_data = features_json["features"];
+            
+            //Loads features from features JSON
+            for(int i = 0; i < n_features; i++) {
+                vector<float> feature;
+                Json::Value feature_data = features_data[i];
+                for(int j = 0; j < feature_size; j++) {
+                    feature.push_back(stof(feature_data[j].asString()));
+                }
+                temp_features.push_back(feature);
+            }
+            
+            features_file.close();
         } else {
-            temp.crop((temp.getWidth() - temp.getHeight())/2,
-                      0,
-                      temp.getHeight() + (temp.getWidth() - temp.getHeight())/2,
-                      temp.getHeight());
-        }
-        
-        temp.resize(IMG_SIZE, IMG_SIZE);
-        images.push_back(temp);
-        if(i >= features.size()) {
-            if(i%10 == 0) {
-                ofLog() << "calculating features for image: " + to_string(i) << endl;
-            }
-            features.push_back(ccv.encode(temp, ccv.numLayers() - 1));
             resave_features = true;
-            
         }
-    }
-    
-    if(resave_features) {
-        string file_to_del = features_file.getAbsolutePath() + "images/features_" + to_string(FEATURE_VEC_LEN) + ".json";
-        ofLog() << remove(file_to_del.c_str());
-        ofLog() << "saving features" << endl;
-        ofFile new_features_file("images/features_" + to_string(FEATURE_VEC_LEN) + ".json", ofFile::ReadWrite);
-        if(!new_features_file.exists()) {
-            new_features_file.create();
-        }
-        Json::Value n_features(Json::uintValue);
-        n_features = (uint)features.size();
+        ofLog() << "features read successfully: " + to_string(temp_features.size()) << endl;
+        ofLog() << "loading image paths from dir: "  + image_dir.path() << endl;
         
-        Json::Value feature_size(Json::uintValue);
-        feature_size = (uint)features[0].size();
-        Json::Value features_vec(Json::arrayValue);
+        vector<ofFile> image_files;
         
-        for(int ii = 0; ii < features.size(); ii++) {
-            
-            Json::Value feature_vec;
-            for(int jj = 0; jj < features[ii].size(); jj++) {
-                Json::Value temp(Json::realValue);
-                temp = features[ii][jj];
-                feature_vec.append(temp);
+        //Loads directory of images into image_files vector
+        scan_dir_imgs(image_dir, image_files);
+        ofLog() << image_files.size();
+        ofLog() << n_images;
+        //Loads images into global images vector
+        ofLog() << "loadings images" << endl;
+        for(int i = 0; i < n_images; i++) {
+            ofImage temp;
+            temp.load(image_files[i]);
+            if(temp.getHeight() > temp.getWidth()) {
+                temp.crop(0,
+                          (temp.getHeight() - temp.getWidth())/2,
+                          temp.getWidth(),
+                          temp.getWidth() + (temp.getHeight() - temp.getWidth())/2);
+            } else {
+                temp.crop((temp.getWidth() - temp.getHeight())/2,
+                          0,
+                          temp.getHeight() + (temp.getWidth() - temp.getHeight())/2,
+                          temp.getHeight());
             }
-            features_vec.append(feature_vec);
+            
+            temp.resize(IMG_SIZE, IMG_SIZE);
+            images.push_back(temp);
+            if(i >= temp_features.size()) {
+                if(i%10 == 0) {
+                    ofLog() << "calculating features for image: " + to_string(i) << endl;
+                }
+                temp_features.push_back(ccv.encode(temp, ccv.numLayers() - 1));
+                resave_features = true;
+                
+            }
         }
-        features_json["n_features"] = n_features;
-        features_json["feature_size"] = feature_size;
-        features_json["features"] = features_vec;
-        Json::FastWriter writer;
-        new_features_file << writer.write(features_json);
-        new_features_file.close();
-        features_saved = true;
+        
+        //Rewrites features.json if some features have been recalculated
+        if(resave_features) {
+            save_features(temp_features, features_file);
+        }
+        
+        features.insert(features.end(), temp_features.begin(), temp_features.end());
     }
     
     // the below computes the grid x & y sizes such that the
     // grid is as close to a square as possible
     
-    for(int n = 1; n < ceil(sqrt(n_images) + 1); n++) {
-        if(n_images%n == 0) {
+    for(int n = 1; n < ceil(sqrt(images.size()) + 1); n++) {
+        if(images.size()%n == 0) {
             grid_y = n;
-            grid_x = n_images/n;
+            grid_x = images.size()/n;
             
         }
     }
@@ -207,7 +203,38 @@ void ofApp::setup(){
 void ofApp::exit() {
 }
 
-
+void ofApp::save_features(vector<vector<float> > temp_features, ofFile features_file) {
+    ofLog() << "resaving " + features_file.path() << endl;
+    ofLog() << "saving features" << endl;
+    ofFile new_features_file(features_file, ofFile::WriteOnly);
+    if(!new_features_file.exists()) {
+        new_features_file.create();
+    }
+    Json::Value n_features(Json::uintValue);
+    n_features = (uint)temp_features.size();
+    
+    Json::Value feature_size(Json::uintValue);
+    feature_size = (uint)temp_features[0].size();
+    Json::Value features_vec(Json::arrayValue);
+    
+    for(int ii = 0; ii < temp_features.size(); ii++) {
+        
+        Json::Value feature_vec;
+        for(int jj = 0; jj < temp_features[ii].size(); jj++) {
+            Json::Value temp(Json::realValue);
+            temp = temp_features[ii][jj];
+            feature_vec.append(temp);
+        }
+        features_vec.append(feature_vec);
+    }
+    features_json["n_features"] = n_features;
+    features_json["feature_size"] = feature_size;
+    features_json["features"] = features_vec;
+    Json::FastWriter writer;
+    new_features_file << writer.write(features_json);
+    new_features_file.close();
+    features_saved = true;
+}
 //--------------------------------------------------------------
 void ofApp::update() {
     iter++;
