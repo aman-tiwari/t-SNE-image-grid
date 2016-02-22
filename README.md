@@ -1,25 +1,34 @@
 # t-SNE-image-grid
 
-An openframeworks project that creates a grid of images from a t-SNE projection of ImageNet descriptors.
+An openframeworks project that creates a grid of images from a t-SNE projection of ImageNet descriptors of those images.
 
 Run ```./setup.sh``` to download the pretrained ImageNet classifier used to generate the descriptiors.
 
-Expects images to be in/in subdirectories within ```data/images``` (recurses into subdirectories).
-Saves a JSON file containing the descriptors in ```images/features_4096.json```.
-
-Optionally reads settings from the ```settings.json``` file:
+Reads settings from the ```data/settings.json``` file:
 ```
-{ "n_images": 4096, 
-  "draw_tsne": false, 
-  "dims": 2,
-  "perplexity": 30,
-  "theta": 0.5,
-  "normalize": true }
-```
+{"image_sets" :
+    [
+        {"directory":"cool_pics/"},
+        {"directory": "nice_pics/"}
+    ],
+ "n_images" : 20, 
+ "draw_tsne": false,
+ "dims": 2,
+ "perplexity": 35,
+ "theta": 0.5,
+ "normalize": true}
 
+```
+```image_sets``` is a list of directories relative to the settings.json file that contain the images you want to cluster (sub-directories within these are scanned too).
+
+```n_images``` specifices how many images to pick each image set.
+
+```draw_tsne``` specifies whether to draw the in-progress t-sne to the screen (set to ```true``` if you love hypercubes)
 Any non-integer value for ```n_images``` loads all the available images.
 
-Run from the console to see logging output (```cd tSNE_images_gridDebug.app/Contents/MacOS/```, ```./tStSNE_images_gridDebug```)
+Saves a JSON file containing the descriptors in ```<image_set_directory>/features_4096.json```.
+
+I highly reccomend that you run from the console to see logging output (```cd tSNE_images_gridDebug.app/Contents/MacOS/```, ```./tStSNE_images_gridDebug```)
 
 Uses:
   * [ofxCcv](https://github.com/kylemcdonald/ofxCcv)
