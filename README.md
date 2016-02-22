@@ -21,10 +21,9 @@ Reads settings from the ```data/settings.json``` file:
 ```
 ```image_sets``` is a list of directories relative to the settings.json file that contain the images you want to cluster (sub-directories within these are scanned too).
 
-```n_images``` specifices how many images to pick each image set.
+```n_images``` specifices how many images to pick from each image set.
 
 ```draw_tsne``` specifies whether to draw the in-progress t-sne to the screen (set to ```true``` if you love hypercubes)
-Any non-integer value for ```n_images``` loads all the available images.
 
 Saves a JSON file containing the descriptors in ```<image_set_directory>/features_4096.json```.
 
