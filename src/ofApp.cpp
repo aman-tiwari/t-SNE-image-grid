@@ -11,7 +11,7 @@ void ofApp::scan_dir_imgs(ofDirectory dir, vector<ofFile>& image_files)
     ofDirectory new_dir;
     
     size = dir.listDir();
-    
+
     for (i = 0; i < size; i++) {
         
         if (dir.getFile(i).isDirectory()) {
@@ -38,6 +38,7 @@ void ofApp::setup() {
     ccv.setup("image-net-2012.sqlite3");
     ofLog() << "loaded ccv" << endl;
     
+    
     std:vector<ofDirectory> image_dirs;
     
     ofFile settings_file("settings.json");
@@ -53,6 +54,8 @@ void ofApp::setup() {
         Json::Value image_sets = settings_json["image_sets"];
         
         ofLog() << "image directories: " << endl;
+        
+        //Calcuates total number of images
         for(int i = 0; i < image_sets.size(); i++) {
             ofLog() << image_sets[i]["directory"].asString() << endl;
             image_dirs.push_back(ofDirectory(image_sets[i]["directory"].asString()));
@@ -75,10 +78,12 @@ void ofApp::setup() {
         normalize = settings_json["normalize"].asBool();
         
     } else {
+        
         ofLog() << "err: settings.json not found!" << endl;
         ofBaseApp::exit();
         
     }
+    
     // Loads n images, where n is the nearest square to the number
     // of available images (so we can get a nice square grid
     ofLog() << "n imgs: " + to_string(n_images);
@@ -93,14 +98,12 @@ void ofApp::setup() {
         
         vector< vector<float> > temp_features;
 
-        ofFile features_file(image_dir.path() + "features_" + to_string(FEATURE_VEC_LEN) + ".json", ofFile::ReadWrite);
-        ofLog() << features_file.path();
-        for(auto file : image_dir) {
-            if(file.getFileName() == "features_" + to_string(FEATURE_VEC_LEN) + ".json") {
-                features_file = ofFile(file, ofFile::ReadWrite);
-            }
-        }
         
+        // Loads features
+        
+        //Finds features file
+        ofFile features_file(image_dir.path() + "features_" + to_string(FEATURE_VEC_LEN) + ".json", ofFile::ReadWrite);
+
         if(features_file.exists() && features_json.open(features_file.getAbsolutePath())) {
             ofLog() << "features file exists" << endl;
             ofLog() << "successfully opened " + features_file.path() << endl;
@@ -137,6 +140,9 @@ void ofApp::setup() {
         scan_dir_imgs(image_dir, image_files);
         ofLog() << image_files.size();
         ofLog() << n_images;
+        if(image_files.size() < n_images) {
+            ofLog() << "error: not enough images for n_images setting" << endl;
+        }
         //Loads images into global images vector
         ofLog() << "loadings images" << endl;
         for(int i = 0; i < n_images; i++) {
@@ -246,6 +252,14 @@ void ofApp::update() {
     
 }
 
+bool compare_x(ofVec2f p_1, ofVec2f p_2) {
+    return (p_1.x < p_2.x);
+}
+bool compare_y(ofVec2f p_1, ofVec2f p_2) {
+    return (p_1.y < p_2.y);
+}
+
+
 //--------------------------------------------------------------
 void ofApp::draw(){
     if(iter == 1002) {
@@ -264,23 +278,98 @@ void ofApp::draw(){
         if(!saved) {
             ofLog() << "attempting to save image" << endl;
             ofClear(255,255,255, 0);
-            ofLog() << "allocating pixels" << endl;
-            ofPixels pix;
-            pix.allocate(IMG_SIZE * grid_x, IMG_SIZE * grid_y, OF_IMAGE_COLOR);
-            ofLog() << "allocation successful" << endl;
+            ofLog() << "allocating mat" << endl;
+            
+            Mat res_mat(IMG_SIZE * grid_y, IMG_SIZE * grid_x, CV_8UC3);
 
+            //ofFbo fbo;
+            //fbo.allocate(IMG_SIZE * grid_x, IMG_SIZE * grid_y, OF_IMAGE_COLOR);
+
+            //fbo.clear();
+            ofLog() << "allocation successful" << endl;
+        /*
+            cv::Mat res_mat = Mat(IMG_SIZE * grid_y, IMG_SIZE * grid_x, CV_8UC3);
+            unsigned char* char_pix = (unsigned char*)std::malloc(sizeof(unsigned char) * 128 * 128 * grid_x * grid_y * 3);
+            
+            std::stable_sort(solved_grid.begin(), solved_grid.end(), compare_x);
+            std::stable_sort(solved_grid.begin(), solved_grid.end(), compare_y); */
+            fbo.begin();
             for(int i = 0; i < solved_grid.size(); i++) {
-                images[i].getPixels().pasteInto(pix,
+                
+                /*ofPixels img_pixels = images[i].getPixels();
+                ofLog() << img_pixels.getNumChannels();
+                unsigned char* raw_data = img_pixels.getData();
+                
+                //top left corner of img
+                int width = (IMG_SIZE * grid_x) * 3;
+                int heigth = (IMG_SIZE * grid_y);
+                int cor_x = solved_grid[i].x * (IMG_SIZE * grid_x) * (float)(grid_x-1)/(float)(grid_x) * 3;
+                int cor_y = solved_grid[i].y * (IMG_SIZE * grid_y) * (float)(grid_y-1)/(float)(grid_y);
+                
+                for(int yy = 0; yy < 128; yy++) {
+                    int start_i = (cor_y + yy) * width + cor_x;
+                    for(int xx = 0; xx < 128 * 3; xx++) {
+                        char_pix[start_i + xx] = raw_data[yy * 128 + xx];
+                    }
+                }*/
+                /*images[i].getPixels().pasteInto(pix,
                                                 solved_grid[i].x * (IMG_SIZE * grid_x) * (float)(grid_x-1)/(float)(grid_x),
-                                                solved_grid[i].y * (IMG_SIZE * grid_y) * (float)(grid_y-1)/(float)(grid_y));
+                                                solved_grid[i].y * (IMG_SIZE * grid_y) * (float)(grid_y-1)/(float)(grid_y));*/
+                
+                /*images[i].draw(solved_grid[i].x * (IMG_SIZE * grid_x) * (float)(grid_x-1)/(float)(grid_x),
+                               solved_grid[i].y * (IMG_SIZE * grid_y) * (float)(grid_y-1)/(float)(grid_y));*/
+                Mat temp = toCv(images[i]);
+                temp.copyTo(res_mat(cv::Rect(solved_grid[i].x * (IMG_SIZE * grid_x) * (float)(grid_x-1)/(float)(grid_x),
+                                          solved_grid[i].y * (IMG_SIZE * grid_y) * (float)(grid_y-1)/(float)(grid_y),
+                                          temp.cols,
+                                          temp.rows)));
+                
             }
-            
-            //ofSleepMillis(1000);
-            
+            /*ofFile rgba_file("result_b_" + to_string(ofGetUnixTime()) + ".rgb", ofFile::WriteOnly);
+            rgba_file.write((char*)char_pix, sizeof(unsigned char) * 128 * 128 * grid_x * grid_y * 3);
+            rgba_file.close();
+            std::free(char_pix);
+            //ofSleepMillis(1000);*/
+            //ofImage res;
+            //res.grabScreen(0, 0, (IMG_SIZE * grid_x), (IMG_SIZE * grid_y));
+            //fbo.end();
             //result.setFromPixels(pix);
             ofLog() << "paste successful" << endl;
-            ofSaveImage(pix, "result_" + to_string(ofGetUnixTime()) + ".jpeg", OF_IMAGE_QUALITY_BEST);
-            ofLog() << "save successful" << endl;
+     //       saveMat(res_mat, "result_L_" + to_string(ofGetUnixTime()) + ".rgb");
+     //       ofLog() << "saved mat" << endl;
+            
+            //ofPixels bug causes it to crash if you allocate a pixel array larger than 8192*8192, so we have to
+            //save as a raw binary image and use imagemagick to convert it to something viewable
+            if(grid_x * 128 > 8192 || grid_y * 128 > 8192) {
+                
+                ofLog() << "saving as a raw .rgb image, use imagemagick to convert" << endl;
+                ofFile res_img("result_L_" + to_string(ofGetUnixTime())
+                               + "_" + to_string(grid_x * 128)
+                               + "_" + to_string(grid_y * 128)
+                               + ".rgb", ofFile::WriteOnly);
+                
+                uint8_t* pixelPtr = (uint8_t*)res_mat.data;
+                int cn = res_mat.channels();
+
+                for(int i = 0; i < res_mat.rows; i++)
+                {
+                    for(int j = 0; j < res_mat.cols; j++)
+                    {
+                        res_img << (char)pixelPtr[i*res_mat.cols*cn + j*cn + 0];
+                        res_img << (char)pixelPtr[i*res_mat.cols*cn + j*cn + 1];
+                        res_img << (char)pixelPtr[i*res_mat.cols*cn + j*cn + 2];
+
+                        // do something with BGR values...
+                    }
+                }
+                
+                res_img.close();
+            } else {
+                ofLog() << "saving as a png" << endl;
+                saveImage(res_mat, "result_L_" + to_string(ofGetUnixTime()) + ".png");
+            }
+            //ofSaveImage(res, "result_L_" + to_string(ofGetUnixTime()) + ".jpeg", OF_IMAGE_QUALITY_BEST);
+            ofLog() << "image save successful" << endl;
 
             //result.save("result_" + to_string(ofGetUnixTime()) + ".png");
             saved = true;
@@ -308,6 +397,7 @@ void ofApp::draw(){
     
 
 }
+
 
 //--------------------------------------------------------------
 void ofApp::keyPressed(int key){

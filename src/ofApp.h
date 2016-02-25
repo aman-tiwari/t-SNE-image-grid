@@ -5,6 +5,9 @@
 #include "ofxTSNE.h"
 #include "ofxAssignment.h"
 #include "ofxJSON.h"
+#include "ofxCv.h"
+using namespace cv;
+using namespace ofxCv;
 
 class ofApp : public ofBaseApp {
 
